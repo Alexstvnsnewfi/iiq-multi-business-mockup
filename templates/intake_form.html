@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_forms.html" import text, textarea, select %}
+{% block title %}Lead# {{ lead_number }} · Business Narrative{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 p-8">
+  <div class="max-w-5xl mx-auto">
+    <a href="{{ url_for('home') }}" class="flex items-center gap-2 text-orange-500 hover:text-orange-600 mb-6">
+      {{ icon("arrow-left") }} Return to pipeline
+    </a>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+      <div class="p-6"><h1 class="text-2xl font-bold text-gray-900">Lead# {{ lead_number }}</h1></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div class="border-b border-gray-200 p-4">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium">1</div>
+            <span class="font-medium text-gray-900">Business Narrative</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-medium">2</div>
+            <span class="text-gray-500">Upload Files</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-8">
+        <div class="bg-white rounded-lg p-8 max-w-4xl mx-auto">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-blue-600 rounded flex items-center justify-center"><span class="text-white font-bold text-2xl">N</span></div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">BANK STATEMENT ANALYSIS INTAKE FORM</h2>
+              <p class="text-gray-600">Please complete the following form to submit bank statement for analysis on gross receipts</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" class="p-8">
+        <div class="max-w-4xl mx-auto">
+          <h3 class="text-xl font-semibold text-gray-900 mb-6">Business Narrative</h3>
+          <p class="text-sm text-gray-600 mb-6">Completing intake for business {{ index + 1 }} of {{ total }}</p>
+
+          {% if index == 0 %}
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            {{ text("First Name of Primary Borrower", "primary_borrower_first_name", v) }}
+            {{ text("Last Name of Primary Borrower", "primary_borrower_last_name", v) }}
+          </div>
+          {% endif %}
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Lead Number</label>
+            <input type="text" value="{{ lead_number }}" disabled class="w-full px-4 py-2 border border-gray-300 rounded bg-gray-50 text-gray-500">
+          </div>
+
+          <div class="mb-6">{{ text("Company Name", "business_name", v) }}</div>
+
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            {{ text("Bank Name", "bank_name", v) }}
+            {{ text("Last 4 digits of account number", "account_last_four", v, placeholder="1234", attrs='maxlength="4" pattern="[0-9]{4}"') }}
+          </div>
+
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            {{ text("Number of NSFs/Overdrafts", "nsf_count", v, type="number", attrs='min="0"') }}
+            {{ text("Borrower Ownership Percentage", "borrower_ownership_percentage", v, placeholder="100%") }}
+          </div>
+
+          <div class="mb-6">{{ text("Number of Owners", "number_of_owners", v, type="number", attrs='min="1"') }}</div>
+          <div class="mb-6">{{ text("How long has the borrower been self-employed?", "self_employment_duration", v, placeholder="e.g., 5 years") }}</div>
+          <div class="mb-6">{{ textarea("Is an exception needed on this loan? If Yes, please provide the details", "exception_needed", v, rows=3, required=False) }}</div>
+
+          <div class="border-t border-gray-200 pt-6 mb-6">
+            <h4 class="font-semibold text-gray-900 mb-4">Business Information</h4>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+              {{ text("Type of Business", "business_type", v) }}
+              {{ select("Anticipated Expense Factor", "anticipated_expense_factor", v, [("25%","25%"),("50%","50%"),("75%","75%")]) }}
+            </div>
+
+            <div class="mb-6">{{ text("URL for business website (if any)", "business_url", v, type="url", required=False, placeholder="https://") }}</div>
+            <div class="mb-6">{{ textarea("Business Location", "business_location", v, rows=2) }}</div>
+
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">What type of space the business operated from? *</label>
+              <div class="flex gap-6">
+                {% for s in ["Commercial", "Warehouse", "Residence"] %}
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="space_type" value="{{ s }}" {{ 'checked' if s in spaces }}
+                         class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                  <span class="text-sm text-gray-700">{{ s }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+              {{ select("Bank Statement Months", "bank_statement_months", v, [("12","12 months"),("24","24 months")]) }}
+              {{ select("Bank Statement Type", "bank_statement_type", v, [("Personal","Personal"),("Business","Business"),("Both","Both")]) }}
+            </div>
+
+            <div class="mb-6">{{ textarea("Provide brief description of Service or Product delivered", "business_description", v, rows=4) }}</div>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <a href="{{ url_for('home') }}" class="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</a>
+            <button class="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">{{ 'Complete' if is_last else 'Next Business' }}</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

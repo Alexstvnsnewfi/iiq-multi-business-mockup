@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Analysis Pipeline · NewfiBLU{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50">
+  <header class="bg-white border-b border-gray-200">
+    <div class="flex items-center justify-between px-6 py-3">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <span class="text-white font-bold text-lg">N</span>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900">Newfi<span class="text-blue-600">BLU</span></h1>
+            <p class="text-xs text-gray-600">BROKER LOAN UTILITY</p>
+          </div>
+        </div>
+        <div class="relative ml-8">
+          {{ icon("search", "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400") }}
+          <input type="text" placeholder="Search by Borrower Last name, Loan#"
+                 class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div class="flex items-center gap-6">
+        <button class="text-sm text-blue-600 hover:text-blue-700">Current Turn Times</button>
+        <div class="relative">
+          {{ icon("bell", "w-5 h-5 text-gray-600") }}
+          <span class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">0</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+            {{ icon("user", "w-5 h-5 text-gray-600") }}
+          </div>
+          <span class="text-sm text-gray-700">LendingQB Test<br>Loan Officer</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex">
+    <aside class="w-64 bg-white border-r border-gray-200 min-h-screen">
+      <nav class="p-4">
+        <button class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded w-full">
+          {{ icon("chevron-left", "w-5 h-5") }}
+        </button>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-2"><span>🏠</span><span>Home</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-600 rounded mt-1"><span>📊</span><span class="font-medium">Pipeline</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>💰</span><span>Price Scenario</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>✏️</span><span>Create Loan</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>✏️</span><span>Create HELOC</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>🛠️</span><span>Service Providers</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>📈</span><span>IncomeIQ Bank Stmt Analysis</span></a>
+        <a href="{{ url_for('home') }}" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded mt-1"><span>📚</span><span>Resources</span></a>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-semibold text-gray-900">Analysis Pipeline</h2>
+        <div class="flex gap-3">
+          <form method="post" action="{{ url_for('seed_demo_data') }}"
+                onsubmit="return confirm('This will clear all existing data and populate fresh sample data. Continue?')">
+            <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-medium">Seed Data</button>
+          </form>
+          <form method="post" action="{{ url_for('create_lead') }}">
+            <button class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-medium">Create Analysis</button>
+          </form>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages() %}{% for m in messages %}
+      <div class="mb-6 px-4 py-3 bg-green-50 border border-green-200 text-green-800 text-sm rounded">{{ m }}</div>
+      {% endfor %}{% endwith %}
+
+      <form method="get" action="{{ url_for('home') }}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center gap-4">
+          <label class="text-sm font-medium text-gray-700">Search By</label>
+          <select name="by" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="lead_number" {{ 'selected' if by == 'lead_number' }}>Lead Number</option>
+            <option value="borrower_name" {{ 'selected' if by == 'borrower_name' }}>Borrower Name</option>
+          </select>
+          <input type="text" name="q" value="{{ term }}" placeholder="Enter Lead Number or Borrower Name"
+                 class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="hidden" name="per_page" value="{{ per_page }}">
+          <button class="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-medium">Go</button>
+          <a href="{{ url_for('home') }}" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium">Reset</a>
+        </div>
+      </form>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <div class="text-sm text-gray-600">{{ first }} - {{ last }} of {{ total }}</div>
+          <form method="get" action="{{ url_for('home') }}" class="flex items-center gap-4">
+            {% if term %}<input type="hidden" name="q" value="{{ term }}"><input type="hidden" name="by" value="{{ by }}">{% endif %}
+            <span class="text-sm text-gray-600">Show</span>
+            <select name="per_page" onchange="this.form.submit()" class="border border-gray-300 rounded px-2 py-1 text-sm">
+              {% for n in per_page_choices %}<option value="{{ n }}" {{ 'selected' if n == per_page }}>{{ n }}</option>{% endfor %}
+            </select>
+          </form>
+        </div>
+
+        <table class="w-full">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Lead Number</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Borrower Name</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Loan Officer</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Lead Purpose</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Eligibility Status</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Income Analysis</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for lead in leads %}
+            {% set dest = url_for('analysis', lead_number=lead.lead_number) if lead_is_reviewable(lead) else url_for('intake_count', lead_number=lead.lead_number) %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4">
+                <a href="{{ dest }}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium text-sm">{{ lead.lead_number }}</a>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ lead.borrower_name or '' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ lead.loan_officer or '' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ lead.lead_purpose or '' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ lead.eligibility_status or '' }}</td>
+              <td class="px-6 py-4">
+                {% if lead.income_analysis_status %}
+                  {% if income_status_is_link(lead) %}
+                  <div class="flex items-center gap-2">
+                    <a href="{{ dest }}" class="text-blue-600 hover:text-blue-800 hover:underline text-sm">{{ lead.income_analysis_status }}</a>
+                    {% if lead.eligibility_status == 'Ineligible' and lead.income_analysis_status == 'Review Analysis' %}
+                      {{ icon("alert-triangle", "w-4 h-4 text-orange-500") }}
+                    {% endif %}
+                  </div>
+                  {% else %}
+                  <span class="text-sm text-gray-700">{{ lead.income_analysis_status }}</span>
+                  {% endif %}
+                {% endif %}
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  {% if lead.has_any_analysis or lead.eligibility_status %}{{ icon("check", "w-5 h-5 text-green-600") }}{% endif %}
+                  {% if lead.eligibility_status %}
+                  <button type="button" title="Mockup only - not wired up" class="text-blue-600 hover:text-blue-800 hover:underline text-sm">Register Loan</button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="px-6 py-10 text-center text-sm text-gray-500">No leads found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="flex items-center justify-center gap-1 p-4 border-t border-gray-200">
+          {% set nav = "px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50" %}
+          {% set off = "px-3 py-1 text-sm border border-gray-300 rounded opacity-50 cursor-not-allowed" %}
+          {% if page > 1 %}
+            <a href="{{ page_url(1) }}" class="{{ nav }}">&lt;&lt;</a>
+            <a href="{{ page_url(page - 1) }}" class="{{ nav }}">&lt;</a>
+          {% else %}
+            <span class="{{ off }}">&lt;&lt;</span><span class="{{ off }}">&lt;</span>
+          {% endif %}
+          {% for p in pages %}
+            {% if p == "..." %}<span class="px-2 text-gray-500">...</span>
+            {% elif p == page %}<span class="px-3 py-1 text-sm rounded bg-blue-600 text-white">{{ p }}</span>
+            {% else %}<a href="{{ page_url(p) }}" class="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50">{{ p }}</a>{% endif %}
+          {% endfor %}
+          {% if page < total_pages %}
+            <a href="{{ page_url(page + 1) }}" class="{{ nav }}">&gt;</a>
+            <a href="{{ page_url(total_pages) }}" class="{{ nav }}">&gt;&gt;</a>
+          {% else %}
+            <span class="{{ off }}">&gt;</span><span class="{{ off }}">&gt;&gt;</span>
+          {% endif %}
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

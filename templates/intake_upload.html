@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Lead# {{ lead_number }} · Upload Files{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 p-8">
+  <div class="max-w-5xl mx-auto">
+    <a href="{{ url_for('home') }}" class="flex items-center gap-2 text-orange-500 hover:text-orange-600 mb-6">
+      {{ icon("arrow-left") }} Return to pipeline
+    </a>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+      <div class="p-6"><h1 class="text-2xl font-bold text-gray-900">Lead# {{ lead_number }}</h1></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div class="border-b border-gray-200 p-4">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-medium">✓</div>
+            <span class="text-gray-500">Business Narrative</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium">2</div>
+            <span class="font-medium text-gray-900">Upload Files</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-8">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Upload Bank Statements for {{ business_name or 'this business' }}</h2>
+          <p class="text-gray-600 mb-8">Please upload bank statements for this business. This is a simulated upload screen.</p>
+
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 mb-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="text-gray-600 mb-2">Drag and drop your files here, or click to browse</p>
+            <p class="text-sm text-gray-500">PDF, DOC, DOCX up to 10MB</p>
+          </div>
+
+          <div class="flex justify-center gap-3">
+            <a href="{{ url_for('home') }}" class="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</a>
+            <a href="{{ next_url }}" class="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">{{ 'Complete' if is_last else 'Next Business' }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

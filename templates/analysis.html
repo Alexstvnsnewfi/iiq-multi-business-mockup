@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Lead# {{ lead.lead_number }} · Analysis{% endblock %}
+
+{# ---- reusable pieces -------------------------------------------------- #}
+{% macro status_select(field, current, options, css) %}
+<form method="post" action="{{ url_for('update_status', lead_number=lead.lead_number) }}" class="inline-block">
+  <input type="hidden" name="field" value="{{ field }}">
+  <input type="hidden" name="batch" value="{{ batch.batch_id }}">
+  <select name="value" onchange="this.form.submit()" class="{{ css }}">
+    {% for val, label in options %}<option value="{{ val }}" {{ 'selected' if val == current }}>{{ label }}</option>{% endfor %}
+    {# keep values the dropdown doesn't list (e.g. 'In Review' from the seed data) visible instead of silently showing the first option #}
+    {% if current and current not in (options | map('first') | list) %}<option value="{{ current }}" selected>{{ current }}</option>{% endif %}
+  </select>
+</form>
+{% endmacro %}
+
+{% macro income_status_panel(default) %}
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h4 class="font-medium text-gray-900 mb-2">Income Analysis Status</h4>
+      {{ status_select("income_analysis_status", lead.income_analysis_status or default,
+           [("COMPLETE","Complete"),("IN_PROGRESS","In Progress"),("PENDING","Pending"),("REVIEW_REQUIRED","Review Required")],
+           "px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+    </div>
+    <p class="text-sm text-gray-600">Edit mode enabled for demo purposes</p>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro eligibility_pill() %}
+{% set e = batch.eligibility_status %}
+{% if edit %}
+  {{ status_select("eligibility_status", e or "PENDING",
+       [("ELIGIBLE","Analysis Status - ELIGIBLE"),("INELIGIBLE","Analysis Status - INELIGIBLE"),("PENDING","Analysis Status - PENDING")],
+       "px-3 py-1 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+{% elif e == 'ELIGIBLE' %}<span class="px-3 py-1 bg-green-600 text-white text-sm rounded-full">Analysis Status - ELIGIBLE</span>
+{% elif e == 'INELIGIBLE' %}<span class="px-3 py-1 bg-yellow-600 text-white text-sm rounded-full">Analysis Status - INELIGIBLE</span>
+{% else %}<span class="px-3 py-1 bg-gray-600 text-white text-sm rounded-full">Analysis Status - {{ e or 'PENDING' }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro edit_toggle() %}
+{% if edit %}<a href="{{ url_for('analysis', lead_number=lead.lead_number, batch=batch.batch_id) }}" class="text-sm text-blue-600 hover:text-blue-800">Done</a>
+{% else %}<a href="{{ url_for('analysis', lead_number=lead.lead_number, batch=batch.batch_id, edit=1) }}" class="text-sm text-blue-600 hover:text-blue-800">Edit Status</a>
+{% endif %}
+{% endmacro %}
+
+{% macro stat(label, value) %}
+<div><p class="text-sm text-gray-600">{{ label }}</p><p class="text-lg font-semibold text-gray-900">{{ value }}</p></div>
+{% endmacro %}
+
+{# ---- page ------------------------------------------------------------- #}
+{% block body %}
+<div class="min-h-screen bg-gray-50 p-8">
+  <div class="{{ 'max-w-6xl' if batch else 'max-w-2xl' }} mx-auto">
+    <a href="{{ url_for('home') }}" class="flex items-center gap-2 text-orange-500 hover:text-orange-600 mb-6">
+      {{ icon("arrow-left") }} Return to pipeline
+    </a>
+
+{% if not batch %}
+    <div class="bg-white rounded-lg shadow-lg p-8"><p class="text-gray-600">No batches found for this lead.</p></div>
+
+{% else %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Lead# {{ lead.lead_number }}</h1>
+          <span class="inline-block px-3 py-1 bg-blue-500 text-white text-sm rounded-full">Review Analysis</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+            <div class="relative group">
+              <select onchange="location.href=this.value"
+                      class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]">
+                {% for b in batches %}
+                <option value="{{ url_for('analysis', lead_number=lead.lead_number, batch=b.batch_id, edit=1 if edit else None) }}"
+                        {{ 'selected' if b.batch_id == batch.batch_id }}>
+                  {%- if b.primary_borrower_last_name or b.business_name -%}{{ b.primary_borrower_last_name or '—' }} - {{ b.business_name or '—' }}{%- else -%}{{ b.batch_id }}{%- endif -%}
+                </option>
+                {% endfor %}
+              </select>
+              <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 px-3 py-2 bg-gray-900 text-white text-sm rounded shadow-lg z-10">
+                Select each business to review specific analysis details
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 pt-4">
+        <h2 class="text-lg font-semibold text-gray-900">{{ batch.business_name or batch.batch_id }}</h2>
+        {% if batch.income_period %}
+        <p class="text-sm text-gray-600">Income Period: <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">{{ batch.income_period }}</span></p>
+        {% endif %}
+      </div>
+    </div>
+
+  {% if batch.has_analysis_complete or batch.income_period %}
+    <div class="space-y-6">
+      <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          <p class="ml-3 text-sm text-blue-800">Alert: This loan is currently in view-only mode. Reach out to your AE to unlock the loan and upload more files.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="border-b border-gray-200 flex">
+          <button class="px-6 py-3 font-medium text-blue-600 border-b-2 border-blue-600">Analysis Summary</button>
+          <button class="px-6 py-3 text-gray-600 hover:text-gray-900">Bank Statements</button>
+          <button class="px-6 py-3 text-gray-600 hover:text-gray-900">Business Narrative</button>
+        </div>
+
+        <div class="p-6">
+          {% if edit %}{{ income_status_panel("COMPLETE") }}{% endif %}
+
+          <div class="bg-gray-50 rounded-lg p-6 mb-6">
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+              <h3 class="font-semibold text-gray-900">Analysis Findings</h3>
+            </div>
+            <p class="text-gray-700">{{ batch.analysis_findings or '' }}</p>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-4">Finding Thresholds</h3>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <p class="text-sm text-gray-600">NSF Qualification</p>
+                {% if batch.nsf_qualification == 'OK' %}<p class="text-lg font-semibold text-green-600">OK</p>
+                {% else %}<p class="text-lg font-semibold text-red-600">{{ batch.nsf_qualification or '' }}</p>{% endif %}
+              </div>
+              {{ stat("Large Deposit Threshold", "$" ~ (batch.large_deposit_threshold | num(True) or "0")) }}
+              {{ stat("Changes in the most recent 6-month period", ((batch.changes_recent_6_month | num) ~ "%") if batch.changes_recent_6_month is not none else "—") }}
+              {{ stat("Year over Year Comparison", batch.year_over_year_comparison or "") }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="bg-orange-50 rounded-lg p-6">
+              <h4 class="text-sm text-gray-600 mb-2">INCOME ANALYSIS METHOD</h4>
+              <p class="text-xl font-semibold text-gray-900 mb-4">Fixed Expense Ratio</p>
+              <div class="grid grid-cols-2 gap-4">
+                {{ stat("Expense Ratio", batch.expense_ratio or "") }}
+                {{ stat("Percentage of Ownership", batch.ownership_percentage or "") }}
+              </div>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-6">
+              <h4 class="text-sm text-gray-600 mb-2">Months Reviewed</h4>
+              <p class="text-xl font-semibold text-gray-900 mb-4">{{ batch.income_period or "" }}</p>
+              <div class="grid grid-cols-2 gap-4">
+                {{ stat("Start Period", batch.start_period or "") }}
+                {{ stat("End Period", batch.end_period or "") }}
+              </div>
+            </div>
+          </div>
+
+          {% set e = batch.eligibility_status %}
+          <div class="{{ 'bg-green-50' if e == 'ELIGIBLE' else 'bg-yellow-50' if e == 'INELIGIBLE' else 'bg-gray-50' }} rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              {{ eligibility_pill() }}
+              {{ edit_toggle() }}
+            </div>
+            <h4 class="text-sm text-gray-600 mb-2">Based on submitted expense factor</h4>
+            <p class="text-xl font-semibold text-gray-900 mb-4">Deposit Qualification</p>
+            <p class="text-4xl font-bold text-gray-900">${{ batch.deposit_qualification | num(True) or "0" }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div class="text-center mb-6">
+        <p class="text-gray-600 mb-2">Analysis not yet complete for this batch.</p>
+        {% if batches | length > 1 %}<p class="text-sm text-gray-500">Use the Business Name selector above to view other analyses.</p>{% endif %}
+      </div>
+
+      {% if edit %}{{ income_status_panel("PENDING") }}{% endif %}
+
+      <div class="bg-gray-50 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          {{ eligibility_pill() }}
+          {{ edit_toggle() }}
+        </div>
+        <p class="text-sm text-gray-600 text-center">Status controls available for demo purposes</p>
+      </div>
+
+      <div class="text-center">
+        <a href="{{ url_for('home') }}" class="inline-block px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">Return to Pipeline</a>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+  </div>
+</div>
+{% endblock %}
