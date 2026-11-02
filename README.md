@@ -1,7 +1,6 @@
 # IIQ Test – Flask mockup
 
-A Flask + SQLite port of the Mocha export (NewfiBLU "IncomeIQ Bank Statement Analysis").
-No npm, no React, no build step.
+A Flask + SQLite mockup of potential multi business intake flow.
 
 ## Run it
 
